@@ -94,7 +94,7 @@ function previewPage() {
       <summary role="button" aria-controls="diagnostic-panel">View diagnostic</summary>
       <div class="diagnostic" id="diagnostic-panel"><pre id="diagnostic"></pre><button id="copy" type="button">Copy diagnostic</button></div>
     </details>
-    <span id="status" role="status" aria-live="polite">Checking · generation 1</span>
+    <span id="status" role="status" aria-live="polite">Checking, generation 1</span>
   </header>
   <main>
     <div id="empty">Waiting for the first verified diagram. Invalid input will stay here with an exact diagnostic.</div>
@@ -113,7 +113,7 @@ function previewPage() {
       function render(state) {
         body.dataset.state = state.status;
         if (state.status === 'verified') {
-          status.textContent = 'Verified · rev ' + state.revision;
+          status.textContent = 'Verified, rev ' + state.revision;
           failure.hidden = true;
           failure.open = false;
           if (state.revision !== lastRevision) {
@@ -122,11 +122,11 @@ function previewPage() {
             body.dataset.hasArtifact = 'true';
           }
         } else if (state.status === 'needs-fix') {
-          status.textContent = 'Needs fix · ' + (state.revision ? 'showing rev ' + state.revision : 'no verified revision');
-          diagnostic.textContent = 'Generation ' + state.generation + ' · ' + state.failure.stage + '\\n\\n' + state.failure.message;
+          status.textContent = 'Needs fix, ' + (state.revision ? 'showing rev ' + state.revision : 'no verified revision');
+          diagnostic.textContent = 'Generation ' + state.generation + ', ' + state.failure.stage + '\\n\\n' + state.failure.message;
           failure.hidden = false;
         } else {
-          status.textContent = 'Checking · generation ' + state.generation;
+          status.textContent = 'Checking, generation ' + state.generation;
           failure.hidden = true;
         }
       }
