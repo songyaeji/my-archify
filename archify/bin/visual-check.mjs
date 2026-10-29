@@ -1,7 +1,5 @@
 import { softwareNoticesHtml } from '../renderers/shared/software-notices.mjs';
 import { spawn } from 'node:child_process';
-import { isExplainerHtml } from '../explainer/check.mjs';
-import { EXPLAINER_VIEWPORTS, inspectExplainerBrowser, explainerObservation, explainerObservationDiagnostics } from '../explainer/browser-check.mjs';
 import { createOwnedTempDirectory } from '../renderers/shared/owned-temp-directory.mjs';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
@@ -2464,10 +2462,9 @@ async function runBrowserEvidence({
     throw regularFileCaptureError('The visual-check artifact', capturedArtifact);
   }
   const artifactBytes = capturedArtifact.content.buffer;
-  const explainer = isExplainerHtml(artifactBytes.toString('utf8'));
-  const inspectionViewports = explainer ? EXPLAINER_VIEWPORTS : VISUAL_CHECK_VIEWPORTS;
-  const captureViewports = explainer ? EXPLAINER_VIEWPORTS : CAPTURE_VIEWPORTS;
-  const observe = explainer ? explainerObservation : observation;
+  const inspectionViewports = VISUAL_CHECK_VIEWPORTS;
+  const captureViewports = CAPTURE_VIEWPORTS;
+  const observe = observation;
   try {
   const outputs = evidenceSidecarPaths(artifact, { outDir, command, capture, captureViewports });
   const directory = resolveSidecarDirectory(artifact, outputs, compareSidecarParents);
@@ -2478,11 +2475,6 @@ async function runBrowserEvidence({
     chrome: { status: 'not-checked', executable: null },
     deliveryProvenance, command, capture,
   });
-  if (explainer) {
-    receipt.family = 'explainer';
-    receipt.viewportPolicy = 'explainer-desktop-v1';
-    receipt.containment.policy = 'horizontal-containment-readable-document-scroll';
-  }
   if (!directory.ok) {
     receipt.error = directory.error;
     receipt.diagnostics = [directory.diagnostic];
@@ -2585,7 +2577,7 @@ async function runBrowserEvidence({
     ]));
 
     try {
-      const inspect = (options) => explainer ? inspectExplainerBrowser(browser, options) : browser.inspect(options);
+      const inspect = (options) => browser.inspect(options);
       for (const viewport of inspectionViewports) {
         const key = screenshotKey(viewport.width, viewport.height, 'light');
         const screenshot = screenshotsByKey.get(key);
@@ -2670,7 +2662,7 @@ async function runBrowserEvidence({
     const containmentPass = allObservations.every((entry) => entry.ok);
     const readabilityPass = receipt.readability.viewports.every((entry) => entry.readabilityOk);
     const viewerChromePass = allObservations.every((entry) => entry.viewerChromeOk);
-    receipt.diagnostics = (explainer ? explainerObservationDiagnostics : observationDiagnostics)({
+    receipt.diagnostics = observationDiagnostics({
       artifact,
       allObservations,
       readabilityObservations: receipt.readability.viewports, command,
@@ -2683,17 +2675,7 @@ async function runBrowserEvidence({
       receipt.captures.status = 'pass';
       receipt.captures.contactSheet = path.basename(outputs.contactSheet);
     }
-    if (explainer) {
-      receipt.containment.viewports = allObservations.map(entry => ({ ...entry }));
-      receipt.readability.viewports = allObservations.map(entry => ({ ...entry }));
-      receipt.viewerChrome.viewports = allObservations.map(entry => ({ ...entry }));
-      receipt.commonQa = { status: allObservations.every(e => e.consoleErrors.length === 0 && e.duplicateIds.length === 0 && e.keyboardIssues.length === 0 && e.keyboardTraversal?.ok) ? 'pass' : 'fail', observations: allObservations.map(e => ({width:e.width,theme:e.theme,ok:e.consoleErrors.length===0&&e.duplicateIds.length===0&&e.keyboardIssues.length===0&&e.keyboardTraversal?.ok===true})) };
-      receipt.interactions = { status: allObservations.every(e => e.interactionFailures.length === 0) ? 'pass' : 'fail', observations: allObservations.map(e => ({width:e.width,theme:e.theme,ok:e.interactionFailures.length===0,failures:e.interactionFailures})) };
-      receipt.references = { status: allObservations.every(e => e.references.length === 0) ? 'pass' : 'fail', observations: allObservations.map(e => ({width:e.width,theme:e.theme,ok:e.references.length===0,failures:e.references})) };
-      receipt.noJavaScript = { status: allObservations.every(e => e.noJavaScript.every(n => n.ok)) ? 'pass' : 'fail', observations: allObservations.map(e => ({width:e.width,theme:e.theme,ok:e.noJavaScript.every(n=>n.ok),states:e.noJavaScript})) };
-      receipt.print = { status: allObservations.every(e => e.print.ok) ? 'pass' : 'fail', observations: allObservations.map(e => ({width:e.width,...e.print})) };
-    }
-    receipt.ok = containmentPass && themeStatePass && readabilityPass && viewerChromePass && (!explainer || receipt.diagnostics.length === 0);
+    receipt.ok = containmentPass && themeStatePass && readabilityPass && viewerChromePass;
     receipt.status = receipt.ok ? 'pass' : 'fail';
     if (capture) writeStagedEvidence(ownership, outputs.contactSheet, contactSheetHtml({
       artifactPath: artifact,
