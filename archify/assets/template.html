@@ -9192,7 +9192,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           });
           target.setAttribute('aria-label', description);
           var title = document.createElementNS(svgNamespace, 'title');
-          title.textContent = record.fromLabel + ' \u2192 ' + record.toLabel + ' \u00b7 ' + record.label;
+          title.textContent = record.fromLabel + ' \u2192 ' + record.toLabel + ', ' + record.label;
           target.appendChild(title);
           record.shapes.forEach(function (shape) {
             target.appendChild(relationshipHitGeometry(shape));
@@ -9315,7 +9315,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           section.className = 'relationship-lens-group';
           var heading = document.createElement('span');
           heading.className = 'relationship-lens-group-title';
-          heading.textContent = group.label + ' · ' + items.length;
+          heading.textContent = group.label + ', ' + items.length;
           section.appendChild(heading);
           items.forEach(function (relationship) {
             var button = document.createElement('button');
@@ -11210,7 +11210,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           hint: detailHint
         });
         var readout = (showDetailLevel ? resolvedLevel + ' ' : '') + percent;
-        resetBtn.setAttribute('aria-label', readout + ' · ' + viewerText('viewer.nav.camera', { hint: detailHint }));
+        resetBtn.setAttribute('aria-label', readout + ', ' + viewerText('viewer.nav.camera', { hint: detailHint }));
         resetBtn.setAttribute('data-detail-level', detail);
         container.setAttribute('data-detail-level', detail);
         container.setAttribute('data-camera-mode', state.mode);
@@ -12570,8 +12570,8 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           links.title = context.kind === 'focus' ? badge : action;
           if (item.links === 0) links.setAttribute('data-zero', 'true');
           var meta = document.createElement('small');
-          meta.textContent = [viewerKindLabel(item.type), item.id, item.sublabel, item.tag].filter(Boolean).join(' \u00b7 ');
-          meta.title = [viewerKindLabel(item.type), item.id, item.context, item.sublabel, item.tag].filter(Boolean).join(' \u00b7 ');
+          meta.textContent = [viewerKindLabel(item.type), item.id, item.sublabel, item.tag].filter(Boolean).join(', ');
+          meta.title = [viewerKindLabel(item.type), item.id, item.context, item.sublabel, item.tag].filter(Boolean).join(', ');
           button.appendChild(name);
           button.appendChild(links);
           button.appendChild(meta);
@@ -13036,7 +13036,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           }
           item.className = 'route-probe-node';
           item.textContent = nodeLabel(byId[id], id);
-          item.title = nodeLabel(byId[id], id) + ' · ' + id;
+          item.title = nodeLabel(byId[id], id) + ', ' + id;
           if (index === 0) item.setAttribute('data-endpoint', 'start');
           if (index === ids.length - 1 && ids.length > 1) item.setAttribute('data-endpoint', 'end');
           path.appendChild(item);

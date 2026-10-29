@@ -417,7 +417,7 @@ export function focusNodeAttrs(id, label, metadata = {}, locale) {
 export function focusNodeTitle(label, metadata = {}) {
   const parts = [label, metadata.sublabel, metadata.context, metadata.tag, metadata.brand]
     .filter((value) => value !== undefined && value !== null && String(value).trim() !== '');
-  return `<title>${esc(parts.join(' · '))}</title>`;
+  return `<title>${esc(parts.join(', '))}</title>`;
 }
 
 export function focusEdgeAttrs(from, to, label, key, id) {
