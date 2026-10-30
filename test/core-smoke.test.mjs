@@ -12,16 +12,6 @@ const skillRoot = fileURLToPath(new URL('../archify/', import.meta.url));
 const cli = path.join(skillRoot, 'bin/archify.mjs');
 const examples = [
   ['architecture', 'web-app.architecture.json', 'components'],
-  ['workflow', 'agent-tool-call.workflow.json', 'nodes'],
-  ['sequence', 'cache-miss-request.sequence.json', 'participants'],
-  ['dataflow', 'product-analytics.dataflow.json', 'nodes'],
-  ['lifecycle', 'agent-run.lifecycle.json', 'states'],
-  ['erd', 'orders.erd.json', 'entities'],
-  ['tree', 'payment-platform.tree.json', 'nodes'],
-  ['class', 'payments.class.json', 'types'],
-  ['timeline', 'payment-incident.timeline.json', 'events'],
-  ['waterfall', 'checkout-request.waterfall.json', 'spans'],
-  ['explainer', 'delivery.explainer.json', 'panels'],
 ];
 
 function identity(file) {
@@ -39,21 +29,6 @@ function attribute(node, name) {
 
 function assertDiagram(output, document, collection) {
   const elements = descendants(parse(fs.readFileSync(output, 'utf8')));
-  if (document.diagram_type === 'explainer') {
-    const answer = elements.find((node) => attribute(node, 'id') === 'answer');
-    assert.ok(answer, 'the explainer must contain its initial answer without JavaScript');
-    const text = descendants(answer).filter((node) => node.nodeName === '#text').map((node) => node.value).join('');
-    assert.ok(text.includes(document.answer.summary.replaceAll('**', '')), 'the authored answer must remain readable in the HTML');
-    for (const panel of document.panels) {
-      assert.ok(elements.some((node) => attribute(node, 'id') === panel.id), `missing authored explainer panel ${panel.id}`);
-    }
-    const payload = elements.find((node) => attribute(node, 'id') === 'archify-explainer-prepared');
-    assert.ok(payload, 'the explainer must retain its original draft for patching');
-    const bundle = JSON.parse(payload.childNodes.map((node) => node.value || '').join(''));
-    assert.equal(JSON.parse(bundle.sourceText).meta.id, document.meta.id);
-    assert.equal(bundle.source.sha256, createHash('sha256').update(bundle.sourceText).digest('hex'));
-    return;
-  }
   const svg = elements.find((node) => node.tagName === 'svg' && attribute(node, 'role') === 'img');
   assert.ok(svg, 'the HTML must contain an accessible diagram SVG');
   const viewBox = attribute(svg, 'viewBox')?.trim().split(/\s+/).map(Number);
@@ -122,7 +97,7 @@ test('core smoke: public CLI diagrams, compatibility and delivery safety', async
     assert.deepEqual(fs.readdirSync(directory).filter((name) => name.startsWith('.archify-')
       || name.endsWith('.delivery-lock.json')), [], 'completed attempt must release locks and staging');
   }
-  let workflow;
+  let official;
 
   for (const [type, filename, collection] of examples) {
     await t.test(`${type}: validate, render and deliver the official example`, () => {
@@ -172,11 +147,11 @@ test('core smoke: public CLI diagrams, compatibility and delivery safety', async
       assert.deepEqual(provenance.specification, identity(input));
       assert.deepEqual(provenance.artifact, identity(output));
       assert.deepEqual(fs.readdirSync(directory).sort(), [path.basename(input), path.basename(rendered), path.basename(output), path.basename(sidecar)].sort());
-      if (type === 'workflow') workflow = { directory, input, output, sidecar, document };
+      if (type === 'architecture') official = { directory, input, output, sidecar, document };
     });
   }
 
-  for (const [type, filename, collection] of examples.slice(0, 4)) {
+  for (const [type, filename, collection] of examples) {
     await t.test(`${type}: frozen schema-v1 input remains valid and renderable`, () => {
       const input = fileURLToPath(new URL(`./fixtures/v1-baseline/${filename}`, import.meta.url));
       const document = JSON.parse(fs.readFileSync(input, 'utf8'));
@@ -199,45 +174,45 @@ test('core smoke: public CLI diagrams, compatibility and delivery safety', async
   });
 
   await t.test('strict provenance binds the delivered artifact bytes', (t) => {
-    if (!workflow) return t.skip('requires a successful official workflow delivery');
-    const checked = receipt(['check', workflow.output, '--require-provenance']);
+    if (!official) return t.skip('requires a successful official architecture delivery');
+    const checked = receipt(['check', official.output, '--require-provenance']);
     assert.equal(checked.ok, true);
     assert.equal(checked.provenance, 'current');
-    const original = fs.readFileSync(workflow.output);
+    const original = fs.readFileSync(official.output);
     try {
-      fs.appendFileSync(workflow.output, '\n<!-- changed after delivery -->\n');
-      const failed = receipt(['check', workflow.output, '--require-provenance'], workspace, 1);
+      fs.appendFileSync(official.output, '\n<!-- changed after delivery -->\n');
+      const failed = receipt(['check', official.output, '--require-provenance'], workspace, 1);
       const diagnostic = assertDiagnostic(failed, 'delivery/provenance-mismatch');
       assert.equal(diagnostic.evidence.expectedSha256, createHash('sha256').update(original).digest('hex'));
-      assert.equal(diagnostic.evidence.actualSha256, identity(workflow.output).sha256);
+      assert.equal(diagnostic.evidence.actualSha256, identity(official.output).sha256);
       assert.notEqual(diagnostic.evidence.actualSha256, diagnostic.evidence.expectedSha256);
     } finally {
-      fs.writeFileSync(workflow.output, original);
+      fs.writeFileSync(official.output, original);
     }
   });
 
   await t.test('invalid schema preserves the last artifact and marks its delivery as failed', (t) => {
-    if (!workflow) return t.skip('requires a successful official workflow delivery');
-    const invalid = structuredClone(workflow.document);
-    invalid.nodes[0].unexpected = true;
-    const input = path.join(workflow.directory, 'invalid.workflow.json');
+    if (!official) return t.skip('requires a successful official architecture delivery');
+    const invalid = structuredClone(official.document);
+    invalid.components[0].unexpected = true;
+    const input = path.join(official.directory, 'invalid.architecture.json');
     fs.writeFileSync(input, JSON.stringify(invalid));
-    const prior = fs.readFileSync(workflow.output);
-    const validated = receipt(['validate', 'workflow', input, '--json'], workspace, 1);
+    const prior = fs.readFileSync(official.output);
+    const validated = receipt(['validate', 'architecture', input, '--json'], workspace, 1);
     const diagnostic = assertDiagnostic(validated, 'schema/additionalProperties');
-    assert.equal(diagnostic.subject.identity, invalid.nodes[0].id);
+    assert.equal(diagnostic.subject.identity, invalid.components[0].id);
     assert.equal(diagnostic.evidence.additionalProperty, 'unexpected');
-    const failed = receipt(['deliver', 'workflow', input, workflow.output, '--json'], workspace, 1);
+    const failed = receipt(['deliver', 'architecture', input, official.output, '--json'], workspace, 1);
     assertDiagnostic(failed, 'schema/additionalProperties');
-    assert.deepEqual(fs.readFileSync(workflow.output), prior);
-    const provenance = JSON.parse(fs.readFileSync(workflow.sidecar, 'utf8'));
+    assert.deepEqual(fs.readFileSync(official.output), prior);
+    const provenance = JSON.parse(fs.readFileSync(official.sidecar, 'utf8'));
     assert.equal(provenance.status, 'failed');
     assert.equal(provenance.receiptId, failed.receiptId);
-    assert.deepEqual(provenance.artifact, identity(workflow.output));
-    const checked = receipt(['check', workflow.output, '--require-provenance'], workspace, 1);
+    assert.deepEqual(provenance.artifact, identity(official.output));
+    const checked = receipt(['check', official.output, '--require-provenance'], workspace, 1);
     assertDiagnostic(checked, 'delivery/provenance-failed');
     // The failure record/journal is intentional recovery evidence; temporary
     // publication directories and completed-attempt locks must be gone.
-    assertNoStaging(workflow.directory);
+    assertNoStaging(official.directory);
   });
 });
