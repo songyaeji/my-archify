@@ -855,7 +855,7 @@
           });
           target.setAttribute('aria-label', description);
           var title = document.createElementNS(svgNamespace, 'title');
-          title.textContent = record.fromLabel + ' \u2192 ' + record.toLabel + ' \u00b7 ' + record.label;
+          title.textContent = record.fromLabel + ' \u2192 ' + record.toLabel + ', ' + record.label;
           target.appendChild(title);
           record.shapes.forEach(function (shape) {
             target.appendChild(relationshipHitGeometry(shape));
@@ -978,7 +978,7 @@
           section.className = 'relationship-lens-group';
           var heading = document.createElement('span');
           heading.className = 'relationship-lens-group-title';
-          heading.textContent = group.label + ' · ' + items.length;
+          heading.textContent = group.label + ', ' + items.length;
           section.appendChild(heading);
           items.forEach(function (relationship) {
             var button = document.createElement('button');

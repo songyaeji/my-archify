@@ -117,7 +117,7 @@
           hint: detailHint
         });
         var readout = (showDetailLevel ? resolvedLevel + ' ' : '') + percent;
-        resetBtn.setAttribute('aria-label', readout + ' · ' + viewerText('viewer.nav.camera', { hint: detailHint }));
+        resetBtn.setAttribute('aria-label', readout + ', ' + viewerText('viewer.nav.camera', { hint: detailHint }));
         resetBtn.setAttribute('data-detail-level', detail);
         container.setAttribute('data-detail-level', detail);
         container.setAttribute('data-camera-mode', state.mode);
