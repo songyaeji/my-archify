@@ -4931,3 +4931,54 @@ html[data-ambient-motion="running"][data-motion="live"]:not([data-motion-owner])
   .relationship-pulse-overlay { display: none !important; }
   svg [data-node-id], svg [data-edge-from], svg [data-detail], svg [data-detail-anchor], svg [data-legend-hit], svg { transition: none !important; }
 }
+
+/* Docked detail panel: wide screens keep the Passport beside the diagram
+   instead of floating over it. Narrow screens keep the floating Passport. */
+.passport-sections:empty { display: none; }
+.passport-section { padding: 0.7rem 0 0.2rem; border-top: 1px solid var(--toolbar-border); margin-top: 0.7rem; }
+.passport-section h4 { margin: 0 0 0.4rem; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.02em; color: var(--text); }
+.passport-does { margin: 0; padding-left: 1.1rem; color: var(--text); line-height: 1.5; }
+.passport-does li + li { margin-top: 0.25rem; }
+.passport-none { margin: 0; color: var(--text); }
+.passport-calls { margin: 0; padding: 0; list-style: none; }
+.passport-calls li { display: grid; grid-template-columns: 0.25rem minmax(0, 1fr); gap: 0.55rem; padding: 0.3rem 0; }
+.passport-calls i { display: block; border-radius: 0; }
+.passport-calls span { min-width: 0; color: var(--text); }
+.focus-chip .passport-calls button {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.focus-chip .passport-calls button:hover,
+.focus-chip .passport-calls button:focus-visible { background: none; text-decoration: underline; }
+.passport-calls small { display: block; margin-top: 0.1rem; font-size: 0.75rem; color: var(--text); overflow-wrap: anywhere; }
+@media (min-width: 721px) {
+  html[data-passport-open] body { padding-right: calc(2rem + 380px); }
+  html[data-passport-open] .toolbar { right: calc(380px + 2rem + max(0px, (100vw - 4rem - 380px - min(100vw - 4rem - 380px, var(--archify-reader-width, 1440px))) / 2)); }
+  html[data-passport-open] .focus-chip:not([hidden]) {
+    position: fixed;
+    top: 0 !important;
+    right: 0;
+    bottom: 0;
+    left: auto !important;
+    z-index: 40;
+    width: 380px;
+    max-width: none;
+    overflow-y: auto;
+    border: 0;
+    border-left: 1px solid var(--toolbar-border);
+    border-radius: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+    font-size: 0.875rem;
+  }
+  html[data-passport-open] .relationship-lens-head { padding: 1.25rem 1.1rem 1rem; background: none; }
+  html[data-passport-open] .relationship-lens-drag-handle { display: none; }
+  html[data-passport-open] .relationship-lens-title { font-size: 1.375rem; }
+}

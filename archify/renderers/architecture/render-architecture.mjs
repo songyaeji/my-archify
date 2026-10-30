@@ -1101,6 +1101,13 @@ function connectionStyle(conn) {
   return { cls: conn.response ? `${cls} a-response` : cls, marker, startMarker };
 }
 
+// The detail panel groups a node's connections into callers, callees and
+// responses, and names each connection kind next to its label.
+function connectionDetailAttrs(conn) {
+  const kind = connectionKinds.get(conn.kind);
+  return `${conn.response ? ' data-edge-response="true"' : ''}${conn.both ? ' data-edge-both="true"' : ''}${kind ? ` data-edge-kind-label="${esc(kind.label)}"` : ''}`;
+}
+
 function renderConnectionDefinitions() {
   const markers = toneMarkers.map((tone) => `
           <marker id="arrowhead-tone-${tone}" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto-start-reverse">
@@ -1128,7 +1135,7 @@ function renderConnectionPath(conn, index) {
     : '';
   const crossover = automaticRoute
     ? ` data-composition-crossover="halo"${conn.labelAt ? '' : ' data-composition-independent="true"'}` : '';
-  const edge = `        <path ${focusEdgeAttrs(conn.from, conn.to, conn.label, index, conn.id)} data-composition-points="${routePointsValue(routed.points)}"${crossover}${authoredStraightRouteAttrs(conn, routed.points)} d="${routed.d}" class="${cls}"${animateAttr(arch.meta, 'edge', index)} stroke-width="${strokeWidth}" marker-end="url(#${marker})"${startMarker ? ` marker-start="url(#${startMarker})"` : ''}/>`;
+  const edge = `        <path ${focusEdgeAttrs(conn.from, conn.to, conn.label, index, conn.id)} data-composition-points="${routePointsValue(routed.points)}"${crossover}${authoredStraightRouteAttrs(conn, routed.points)} d="${routed.d}" class="${cls}"${animateAttr(arch.meta, 'edge', index)} stroke-width="${strokeWidth}" marker-end="url(#${marker})"${startMarker ? ` marker-start="url(#${startMarker})"` : ''}${connectionDetailAttrs(conn)}/>`;
   if (!automaticRoute) return edge;
   // The wrapper is presentation-only: viewer state remains on the one semantic
   // edge, while CSS can keep its preceding mask underlay at the same opacity.
@@ -1158,7 +1165,7 @@ function renderComponent(c) {
     : '';
   const brand = renderBrandMark(c, { x: c.x + c.width - 22, y: c.y + 6 });
   const labelFontSize = fittedNodeFontSize(c.label, brandLabelFitWidth(c, c.width), 11, 8);
-  const passport = { kind: c.type, sublabel: c.sublabel, tag: c.tag, context: componentContext(c), ...brandMetadataFor(c) };
+  const passport = { kind: c.type, sublabel: c.sublabel, tag: c.tag, context: componentContext(c), details: c.details, ...brandMetadataFor(c) };
   return `        <g ${focusNodeAttrs(c.id, c.label, passport, arch.meta.locale)}>
           ${focusNodeTitle(c.label, passport)}
           <rect x="${c.x}" y="${c.y}" width="${c.width}" height="${c.height}" rx="8" class="c-mask"/>
