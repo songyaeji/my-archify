@@ -50,3 +50,12 @@ test('the viewer ships the docked panel sections and their strings', t => {
   assert.match(page, /html\[data-passport-open\] \.focus-chip:not\(\[hidden\]\)/);
   assert.match(page, /viewer\.passport\.section\.callers/);
 });
+
+test('the node panel ships an Ask button and the question box strings', t => {
+  const page = render(t);
+  assert.match(page, /id="btn-focus-ask"/);
+  assert.match(page, /Archify\.ask = \(function \(\)/);
+  for (const key of ['viewer.ask.file', 'viewer.ask.location', 'viewer.ask.selection', 'viewer.ask.question']) {
+    assert.match(page, new RegExp(key.replaceAll('.', '\.')));
+  }
+});

@@ -5151,6 +5151,60 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       html[data-passport-open] .relationship-lens-drag-handle { display: none; }
       html[data-passport-open] .relationship-lens-title { font-size: 1.375rem; }
     }
+
+    /* Ask: selection chip and the movable question box. */
+    .archify-ask-primary {
+      border: 1px solid var(--text);
+      border-radius: 0;
+      background: var(--text);
+      color: var(--bg);
+      font-weight: 600;
+      font-size: 0.78rem;
+      line-height: 1;
+      font-family: inherit;
+      padding: 0.45rem 0.65rem;
+      cursor: pointer;
+    }
+    .focus-chip .relationship-lens-actions .archify-ask-primary { border-radius: 0; background: var(--text); color: var(--bg); padding: 0.4rem 0.6rem; }
+    .archify-ask-chip { position: absolute; z-index: 60; }
+    .archify-ask {
+      position: absolute;
+      z-index: 61;
+      width: 360px;
+      border: 1px solid var(--text);
+      background: var(--bg);
+      color: var(--text);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+      font-size: 0.85rem;
+    }
+    .archify-ask-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.25rem 0.35rem 0.25rem 0.75rem;
+      border-bottom: 1px solid var(--toolbar-border);
+      font-weight: 700;
+      cursor: move;
+      user-select: none;
+      touch-action: none;
+    }
+    .archify-ask-bar button { width: 1.75rem; height: 1.75rem; border: 0; background: none; color: var(--text); font-size: 1.1rem; cursor: pointer; }
+    .archify-ask-body { padding: 0.75rem; }
+    .archify-ask-context { margin: 0 0 0.5rem; padding: 0.4rem 0.5rem; border: 1px solid var(--toolbar-border); overflow-wrap: anywhere; }
+    .archify-ask-context b { display: block; font-size: 0.75rem; }
+    .archify-ask textarea {
+      box-sizing: border-box;
+      width: 100%;
+      height: 4.5rem;
+      padding: 0.5rem;
+      border: 1px solid var(--toolbar-border);
+      border-radius: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: inherit;
+      resize: vertical;
+    }
+    .archify-ask-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: 0.5rem; font-size: 0.75rem; }
   </style>
 </head>
 <body>
@@ -5515,6 +5569,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           </div>
           <div class="relationship-lens-actions">
             <button id="btn-focus-clear" type="button" aria-label="{{i18n:viewer.passport.close}}" title="{{i18n:viewer.common.close}}">&#215;</button>
+            <button class="archify-ask-primary" id="btn-focus-ask" type="button" aria-label="{{i18n:viewer.ask.open}}">{{i18n:viewer.ask.button}}</button>
             <button id="btn-focus-copy" type="button" aria-label="{{i18n:viewer.passport.copy.focus}}">{{i18n:viewer.passport.copy}}</button>
             <button id="btn-focus-relations" type="button" aria-label="{{i18n:viewer.passport.relations.show}}" aria-expanded="false" aria-controls="relationship-lens-list">{{i18n:viewer.passport.relations}}</button>
           </div>
@@ -10043,7 +10098,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         if (container.getAttribute('data-just-panned') === 'true') return;
         // Export consumes the active semantic snapshot; its controls are not
         // an outside selection. Genuine outside activation still clears it.
-        if (target.closest('[data-node-id], [data-relationship-hit-key], .overview-map, #btn-export, #export-menu')) return;
+        if (target.closest('[data-node-id], [data-relationship-hit-key], .overview-map, #btn-export, #export-menu, [data-archify-ask]')) return;
         clear();
       }, true);
       window.addEventListener('scroll', requestLensPlacement, { passive: true });
@@ -10121,6 +10176,206 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         },
         active: function () { return activeIds.length === 0 ? null : (activeIds.length === 1 ? activeIds[0] : activeIds.slice()); }
       };
+    })();
+
+
+    /* ============================================================
+       Ask — select text or press Ask in the node panel to write a question.
+       Copy puts the file path, location, selected text and question on the
+       clipboard so the question can be pasted to an agent with its context.
+       ============================================================ */
+    Archify.ask = (function () {
+      var chip = document.getElementById('focus-chip');
+      var askButton = document.getElementById('btn-focus-ask');
+      var selectionChip = null;
+      var box = null;
+      var context = null;
+      var selectionTimer = 0;
+
+      function filePath() {
+        if (location.protocol !== 'file:') return location.origin + location.pathname;
+        var value = decodeURIComponent(location.pathname);
+        // file:///C:/... becomes C:\...; POSIX paths keep their slashes.
+        if (/^\/[A-Za-z]:\//.test(value)) return value.slice(1).split('/').join('\\');
+        return value;
+      }
+      function heading(element) {
+        return element ? element.textContent.replace(/\s+/g, ' ').trim() : '';
+      }
+      function where(element) {
+        var parts = [heading(document.querySelector('.header h1, h1'))];
+        if (element && chip && chip.contains(element)) {
+          parts.push(heading(document.getElementById('focus-label')));
+          var section = element.closest('.passport-section');
+          if (section) parts.push(heading(section.querySelector('h4')));
+          else if (element.closest('#focus-evidence')) parts.push(heading(chip.querySelector('.semantic-passport-evidence-status')));
+          else if (element.closest('#relationship-lens-list')) parts.push(viewerText('viewer.passport.relations'));
+        } else if (element) {
+          var card = element.closest('.card');
+          if (card) parts.push(heading(card.querySelector('h3')));
+        }
+        return parts.filter(Boolean).join(' > ');
+      }
+      function hideSelectionChip() {
+        if (selectionChip) selectionChip.remove();
+        selectionChip = null;
+      }
+      function close() {
+        if (box) box.remove();
+        box = null;
+      }
+      function copyText() {
+        var question = box.querySelector('textarea').value.trim();
+        return viewerText('viewer.ask.file') + ': ' + filePath() + '\n' +
+          viewerText('viewer.ask.location') + ': ' + context.location +
+          (context.text ? '\n' + viewerText('viewer.ask.selection') + ': "' + context.text + '"' : '') +
+          '\n' + viewerText('viewer.ask.question') + ': ' + question;
+      }
+      function copy() {
+        var text = copyText();
+        var button = box.querySelector('[data-ask-copy]');
+        function done() {
+          button.textContent = viewerText('viewer.ask.copied');
+          window.setTimeout(function () { if (button.isConnected) button.textContent = viewerText('viewer.ask.copy'); }, 1500);
+        }
+        function fallback() {
+          var area = document.createElement('textarea');
+          area.value = text;
+          area.setAttribute('data-archify-ask', '');
+          document.body.appendChild(area);
+          area.select();
+          try { document.execCommand('copy'); } catch (_) {}
+          area.remove();
+          done();
+        }
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+          navigator.clipboard.writeText(text).then(done, fallback);
+        } else fallback();
+      }
+      function build() {
+        box = document.createElement('div');
+        box.className = 'archify-ask no-print';
+        box.setAttribute('data-archify-ask', '');
+        box.setAttribute('role', 'dialog');
+        box.setAttribute('aria-label', viewerText('viewer.ask.title'));
+        var bar = document.createElement('div');
+        bar.className = 'archify-ask-bar';
+        var title = document.createElement('span');
+        title.textContent = viewerText('viewer.ask.title');
+        var closeButton = document.createElement('button');
+        closeButton.type = 'button';
+        closeButton.textContent = '\u00d7';
+        closeButton.setAttribute('aria-label', viewerText('viewer.ask.close'));
+        closeButton.addEventListener('click', close);
+        bar.appendChild(title);
+        bar.appendChild(closeButton);
+        var body = document.createElement('div');
+        body.className = 'archify-ask-body';
+        var contextBox = document.createElement('div');
+        contextBox.className = 'archify-ask-context';
+        var area = document.createElement('textarea');
+        area.name = 'question';
+        area.placeholder = viewerText('viewer.ask.placeholder');
+        var row = document.createElement('div');
+        row.className = 'archify-ask-row';
+        var hint = document.createElement('span');
+        hint.textContent = viewerText('viewer.ask.hint');
+        var copyButton = document.createElement('button');
+        copyButton.type = 'button';
+        copyButton.className = 'archify-ask-primary';
+        copyButton.setAttribute('data-ask-copy', '');
+        copyButton.textContent = viewerText('viewer.ask.copy');
+        copyButton.addEventListener('click', copy);
+        row.appendChild(hint);
+        row.appendChild(copyButton);
+        body.appendChild(contextBox);
+        body.appendChild(area);
+        body.appendChild(row);
+        box.appendChild(bar);
+        box.appendChild(body);
+        document.body.appendChild(box);
+        // The title bar moves the box; buttons inside it keep their clicks.
+        var offsetX = 0;
+        var offsetY = 0;
+        bar.addEventListener('pointerdown', function (event) {
+          if (event.target.closest('button')) return;
+          offsetX = event.pageX - box.offsetLeft;
+          offsetY = event.pageY - box.offsetTop;
+          bar.setPointerCapture(event.pointerId);
+        });
+        bar.addEventListener('pointermove', function (event) {
+          if (!bar.hasPointerCapture(event.pointerId)) return;
+          var width = document.documentElement.scrollWidth;
+          box.style.left = Math.max(0, Math.min(width - box.offsetWidth, event.pageX - offsetX)) + 'px';
+          box.style.top = Math.max(0, event.pageY - offsetY) + 'px';
+        });
+        bar.addEventListener('pointerup', function (event) {
+          if (bar.hasPointerCapture(event.pointerId)) bar.releasePointerCapture(event.pointerId);
+        });
+      }
+      function open(locationText, text, rect) {
+        hideSelectionChip();
+        context = { location: locationText, text: text };
+        var fresh = !box;
+        if (fresh) build();
+        var contextBox = box.querySelector('.archify-ask-context');
+        contextBox.textContent = '';
+        var place = document.createElement('b');
+        place.textContent = locationText;
+        contextBox.appendChild(place);
+        if (text) contextBox.appendChild(document.createTextNode('"' + text + '"'));
+        if (fresh) {
+          // Beside the docked panel when there is one, otherwise under the text.
+          var panel = chip && !chip.hidden ? chip.getBoundingClientRect() : null;
+          var left = panel && panel.left > 380 ? panel.left - box.offsetWidth - 12 : rect.left;
+          var top = panel && panel.left > 380 ? rect.top : rect.bottom + 8;
+          var maxLeft = document.documentElement.clientWidth - box.offsetWidth - 8;
+          box.style.left = Math.max(8, Math.min(maxLeft, left)) + window.scrollX + 'px';
+          box.style.top = Math.max(8, top) + window.scrollY + 'px';
+        }
+        box.querySelector('textarea').focus();
+      }
+      function onSelection() {
+        window.clearTimeout(selectionTimer);
+        selectionTimer = window.setTimeout(function () {
+          var selection = window.getSelection();
+          var text = selection ? selection.toString().replace(/\s+/g, ' ').trim() : '';
+          if (!text || !selection.rangeCount) { hideSelectionChip(); return; }
+          var range = selection.getRangeAt(0);
+          var start = range.startContainer.nodeType === 1 ? range.startContainer : range.startContainer.parentElement;
+          if (!start || start.closest('[data-archify-ask], input, textarea, svg')) { hideSelectionChip(); return; }
+          var rects = range.getClientRects();
+          var rect = rects[rects.length - 1] || range.getBoundingClientRect();
+          hideSelectionChip();
+          selectionChip = document.createElement('button');
+          selectionChip.type = 'button';
+          selectionChip.className = 'archify-ask-primary archify-ask-chip no-print';
+          selectionChip.setAttribute('data-archify-ask', '');
+          selectionChip.textContent = viewerText('viewer.ask.button');
+          selectionChip.style.left = rect.right + window.scrollX + 6 + 'px';
+          selectionChip.style.top = rect.top + window.scrollY - 3 + 'px';
+          // Keep the selection while the chip is pressed.
+          selectionChip.addEventListener('mousedown', function (event) { event.preventDefault(); });
+          selectionChip.addEventListener('click', function () { open(where(start), text.slice(0, 500), rect); });
+          document.body.appendChild(selectionChip);
+        }, 120);
+      }
+
+      document.addEventListener('selectionchange', onSelection);
+      document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape' || (!box && !selectionChip)) return;
+        // Escape closes the question box first, before focus and presentation.
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (box) close();
+        else hideSelectionChip();
+      }, true);
+      if (askButton) {
+        askButton.addEventListener('click', function () {
+          open(where(document.getElementById('focus-label')), '', askButton.getBoundingClientRect());
+        });
+      }
+      return { open: open, close: close, where: where, copyText: function () { return box ? copyText() : ''; } };
     })();
 
 

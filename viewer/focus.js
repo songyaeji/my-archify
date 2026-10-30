@@ -1636,7 +1636,7 @@
         if (container.getAttribute('data-just-panned') === 'true') return;
         // Export consumes the active semantic snapshot; its controls are not
         // an outside selection. Genuine outside activation still clears it.
-        if (target.closest('[data-node-id], [data-relationship-hit-key], .overview-map, #btn-export, #export-menu')) return;
+        if (target.closest('[data-node-id], [data-relationship-hit-key], .overview-map, #btn-export, #export-menu, [data-archify-ask]')) return;
         clear();
       }, true);
       window.addEventListener('scroll', requestLensPlacement, { passive: true });
