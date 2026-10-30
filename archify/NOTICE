@@ -30,5 +30,7 @@ Modifications
 songyaeji/my-archify is a modified fork of Archify
 (https://github.com/tt-a1i/archify). Starting in October 2026 it removes every
 diagram type except architecture, the explainer, architecture compare, workflow
-migration and the upstream project site and release tooling. The remaining
+migration and the upstream project site and release tooling. It adds
+connection kinds, response and both-way arrows, a node panel docked beside the
+diagram and an Ask box to the architecture renderer and viewer. The remaining
 files keep their original license and copyright notices.

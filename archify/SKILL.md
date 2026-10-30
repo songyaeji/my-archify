@@ -53,6 +53,8 @@ Before the first candidate, use the authoring references and relevant repository
 - Schema: `schemas/architecture.schema.json`
 - Examples: system descriptions, services, libraries, and CLI repos use `examples/web-app.architecture.json`; deployment repos use `examples/production-deployment.architecture.json`.
 
+Clicking a node opens a panel beside the diagram. Fill it with component `details` (what the component does), and describe arrows with `connection_kinds` plus each connection's `kind`, `response` and `both` fields; see [Schema lookup](references/authoring-contract.md#schema-lookup). The panel groups connections into callers, callees and responses and shows source links under them.
+
 For an everyday subject, keep the same semantic types, then name them for the reader: use everyday `icon` values and `meta.legend` labels as in [Node icons](references/authoring-contract.md#node-icons). Ask for missing personal facts instead of inventing dates, amounts, or rules.
 
 ## Mermaid input

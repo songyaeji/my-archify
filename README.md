@@ -15,6 +15,15 @@ my-archify is an agent skill that turns a system description or a real codebase 
 
 The full list is in the commit history and in [NOTICE](NOTICE).
 
+## What my-archify adds
+
+| Feature | How to use it |
+|---|---|
+| Arrow colors by meaning | Declare `connection_kinds` (`id`, `label`, `tone`) and set `kind` on each connection. The legend lists every kind in use. |
+| Response and both-way arrows | `response: true` draws a dotted reply arrow; `both: true` adds an arrowhead at the start. |
+| Node panel beside the diagram | Click a node to open a panel on the right with its `details`, callers, callees, responses and source links. Click the node again, click empty space, press Escape or use the close button to close it. |
+| Ask | Select text or press Ask in the panel, write a question and press Copy. The clipboard gets the file path, the location in the page, the selected text and the question, ready to paste to an agent. |
+
 ## Install
 
 The skill lives in the `archify/` folder. Node.js 18 or newer is required; the skill itself has no runtime dependencies.
