@@ -86,6 +86,11 @@
           "icon": { "$ref": "common.schema.json#/$defs/nodeIcon" },
           "brand": { "$ref": "common.schema.json#/$defs/brandMark" },
           "sources": { "$ref": "common.schema.json#/$defs/sourceReferences" },
+          "details": {
+            "type": "array",
+            "maxItems": 12,
+            "items": { "type": "string", "minLength": 1, "maxLength": 240 }
+          },
           "row": { "type": "integer", "minimum": 0 },
           "col": { "type": "integer", "minimum": 0 },
           "pos": { "$ref": "common.schema.json#/$defs/point" },
@@ -120,6 +125,20 @@
         }
       }
     },
+    "connection_kinds": {
+      "type": "array",
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label", "tone"],
+        "properties": {
+          "id": { "$ref": "common.schema.json#/$defs/id" },
+          "label": { "type": "string", "minLength": 1 },
+          "tone": { "enum": ["frontend", "backend", "database", "cloud", "security", "messagebus", "external"] }
+        }
+      }
+    },
     "connections": {
       "type": "array",
       "items": {
@@ -132,6 +151,9 @@
           "to": { "$ref": "common.schema.json#/$defs/id" },
           "label": { "type": "string" },
           "variant": { "$ref": "common.schema.json#/$defs/variant" },
+          "kind": { "$ref": "common.schema.json#/$defs/id" },
+          "response": { "type": "boolean" },
+          "both": { "type": "boolean" },
           "fromSide": { "$ref": "common.schema.json#/$defs/side" },
           "toSide": { "$ref": "common.schema.json#/$defs/side" },
           "route": { "enum": ["auto", "straight", "orthogonal-h", "orthogonal-v"] },

@@ -400,6 +400,7 @@ export function focusNodeAttrs(id, label, metadata = {}, locale) {
     ['data-node-brand-id', metadata.brandId],
     ['data-node-brand-status', metadata.brandStatus],
     ['data-node-brand-source', metadata.brandSource],
+    ['data-node-details', Array.isArray(metadata.details) && metadata.details.length ? JSON.stringify(metadata.details) : undefined],
   ].filter(([, value]) => value !== undefined && value !== null && String(value).trim() !== '')
     .map(([name, value]) => ` ${name}="${esc(String(value))}"`)
     .join('');
@@ -417,7 +418,7 @@ export function focusNodeAttrs(id, label, metadata = {}, locale) {
 export function focusNodeTitle(label, metadata = {}) {
   const parts = [label, metadata.sublabel, metadata.context, metadata.tag, metadata.brand]
     .filter((value) => value !== undefined && value !== null && String(value).trim() !== '');
-  return `<title>${esc(parts.join(' · '))}</title>`;
+  return `<title>${esc(parts.join(', '))}</title>`;
 }
 
 export function focusEdgeAttrs(from, to, label, key, id) {

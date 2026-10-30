@@ -29,6 +29,7 @@
       var relationsBtn = document.getElementById('btn-focus-relations');
       var clearBtn = document.getElementById('btn-focus-clear');
       var moveBtn = document.getElementById('btn-focus-move');
+      var sections = document.getElementById('focus-sections');
       var activeIds = [];
       var hoveredRelationship = null;
       var focusedRelationship = null;
@@ -382,7 +383,89 @@
         setPassportValue(document.getElementById('focus-brand'), node.getAttribute('data-node-brand'));
         semanticId.textContent = id;
         semanticId.hidden = false;
+        renderPassportSections(id, node);
         renderSourceEvidence(id);
+      }
+      // Docked detail panel: what the node does, then its connections split
+      // into callers, callees and response routes, each linking to the neighbor.
+      function renderPassportSections(id, node) {
+        sections.textContent = '';
+        var details = [];
+        try { details = JSON.parse(node.getAttribute('data-node-details') || '[]'); } catch (_) { details = []; }
+        var groups = { callers: [], callees: [], responses: [] };
+        var seen = {};
+        Array.prototype.forEach.call(svg.querySelectorAll('path[data-edge-from][data-edge-to]'), function (edge) {
+          var from = edge.getAttribute('data-edge-from');
+          var to = edge.getAttribute('data-edge-to');
+          if (from !== id && to !== id) return;
+          var key = edge.getAttribute('data-edge-key') || (from + '\u0000' + to + '\u0000' + (edge.getAttribute('data-edge-label') || ''));
+          if (seen[key]) return;
+          seen[key] = true;
+          var group = edge.getAttribute('data-edge-response') === 'true' ? 'responses' : (from === id ? 'callees' : 'callers');
+          groups[group].push({ edge: edge, neighbor: from === id ? to : from });
+        });
+        function section(titleKey, body) {
+          var block = document.createElement('section');
+          block.className = 'passport-section';
+          var title = document.createElement('h4');
+          title.textContent = viewerText(titleKey);
+          block.appendChild(title);
+          block.appendChild(body);
+          sections.appendChild(block);
+        }
+        function callList(items) {
+          if (!items.length) {
+            var none = document.createElement('p');
+            none.className = 'passport-none';
+            none.textContent = viewerText('viewer.passport.section.none');
+            return none;
+          }
+          var list = document.createElement('ul');
+          list.className = 'passport-calls';
+          items.forEach(function (item) {
+            var row = document.createElement('li');
+            var swatch = document.createElement('i');
+            swatch.setAttribute('aria-hidden', 'true');
+            swatch.style.background = window.getComputedStyle(item.edge).stroke;
+            var copy = document.createElement('span');
+            var go = document.createElement('button');
+            go.type = 'button';
+            go.setAttribute('data-passport-go', item.neighbor);
+            var neighbor = svg.querySelector('[data-node-id="' + item.neighbor + '"]');
+            go.textContent = neighbor ? nodeLabel(neighbor, item.neighbor) : item.neighbor;
+            copy.appendChild(go);
+            if (item.edge.getAttribute('data-edge-both') === 'true') {
+              copy.appendChild(document.createTextNode(' ' + viewerText('viewer.passport.section.both')));
+            }
+            var edgeLabel = item.edge.getAttribute('data-edge-label');
+            if (edgeLabel) {
+              var text = document.createElement('small');
+              text.textContent = edgeLabel;
+              copy.appendChild(text);
+            }
+            row.appendChild(swatch);
+            row.appendChild(copy);
+            list.appendChild(row);
+          });
+          return list;
+        }
+        if (details.length) {
+          var doesList = document.createElement('ul');
+          doesList.className = 'passport-does';
+          details.forEach(function (line) {
+            var item = document.createElement('li');
+            item.textContent = line;
+            doesList.appendChild(item);
+          });
+          section('viewer.passport.section.does', doesList);
+        }
+        section('viewer.passport.section.callers', callList(groups.callers));
+        section('viewer.passport.section.callees', callList(groups.callees));
+        if (groups.responses.length) section('viewer.passport.section.responses', callList(groups.responses));
+      }
+      function syncPanelOpen() {
+        if (chip.hidden) html.removeAttribute('data-passport-open');
+        else html.setAttribute('data-passport-open', '');
       }
       function relationshipsFor(id, byId) {
         var seen = {};
@@ -855,7 +938,7 @@
           });
           target.setAttribute('aria-label', description);
           var title = document.createElementNS(svgNamespace, 'title');
-          title.textContent = record.fromLabel + ' \u2192 ' + record.toLabel + ' \u00b7 ' + record.label;
+          title.textContent = record.fromLabel + ' \u2192 ' + record.toLabel + ', ' + record.label;
           target.appendChild(title);
           record.shapes.forEach(function (shape) {
             target.appendChild(relationshipHitGeometry(shape));
@@ -978,7 +1061,7 @@
           section.className = 'relationship-lens-group';
           var heading = document.createElement('span');
           heading.className = 'relationship-lens-group-title';
-          heading.textContent = group.label + ' · ' + items.length;
+          heading.textContent = group.label + ', ' + items.length;
           section.appendChild(heading);
           items.forEach(function (relationship) {
             var button = document.createElement('button');
@@ -1158,6 +1241,12 @@
           lensFrame = 0;
         }
         if (chip.hidden || activeIds.length !== 1) return;
+        // Wide screens dock the panel to the right edge; CSS owns its place.
+        if (window.innerWidth > 720) {
+          chip.style.removeProperty('top');
+          chip.style.removeProperty('left');
+          return;
+        }
         var node = svg.querySelector('[data-node-id="' + activeIds[0] + '"]');
         if (!node) return;
         var containerRect = container.getBoundingClientRect();
@@ -1272,6 +1361,8 @@
         });
         edges().forEach(function (edge) { edge.removeAttribute('data-focus-match'); });
         chip.hidden = true;
+        syncPanelOpen();
+        sections.textContent = '';
         label.textContent = '';
         detail.textContent = '';
         detail.hidden = true;
@@ -1374,6 +1465,7 @@
           : viewerText('viewer.focus.selectedNodes', { count: normalized.length });
         label.textContent = options.label || defaultLabel;
         chip.hidden = options.hideChip === true || normalized.length !== 1 || selectionMode;
+        syncPanelOpen();
         if (!chip.hidden) {
           renderRelationshipLens(normalized[0], byId);
           placeRelationshipLens();
@@ -1416,6 +1508,11 @@
         var node = event.target.closest('[data-node-id]');
         if (node) {
           var id = node.getAttribute('data-node-id');
+          // A second click on the open node closes its panel.
+          if (!chip.hidden && activeIds.length === 1 && activeIds[0] === id) {
+            clear();
+            return;
+          }
           set(id);
           if (activeIds.indexOf(id) !== -1 && Archify.view && typeof Archify.view.reveal === 'function') {
             Archify.view.reveal([id], { includeNeighbors: true, reason: 'focus' });
@@ -1445,6 +1542,15 @@
       });
       moveBtn.addEventListener('keydown', moveLensWithKeyboard);
       clearBtn.addEventListener('click', function () { clear({ restoreFocus: true }); });
+      sections.addEventListener('click', function (event) {
+        var go = event.target.closest('[data-passport-go]');
+        if (!go) return;
+        var id = go.getAttribute('data-passport-go');
+        set(id);
+        if (activeIds.indexOf(id) !== -1 && Archify.view && typeof Archify.view.reveal === 'function') {
+          Archify.view.reveal([id], { includeNeighbors: true, reason: 'focus' });
+        }
+      });
       copyBtn.addEventListener('click', copyFocusLink);
       upstreamBtn.addEventListener('click', function () { applyReachability('upstream'); });
       downstreamBtn.addEventListener('click', function () { applyReachability('downstream'); });
@@ -1530,7 +1636,7 @@
         if (container.getAttribute('data-just-panned') === 'true') return;
         // Export consumes the active semantic snapshot; its controls are not
         // an outside selection. Genuine outside activation still clears it.
-        if (target.closest('[data-node-id], [data-relationship-hit-key], .overview-map, #btn-export, #export-menu')) return;
+        if (target.closest('[data-node-id], [data-relationship-hit-key], .overview-map, #btn-export, #export-menu, [data-archify-ask]')) return;
         clear();
       }, true);
       window.addEventListener('scroll', requestLensPlacement, { passive: true });

@@ -20,6 +20,9 @@ Read both the mode schema and `schemas/common.schema.json`. The mode schemas use
 - Entity-relationship documents use `entities` and `relationships`; `key` accepts `pk`, `fk`, or `uk`, and `fromCardinality`/`toCardinality` accept `one` or `many`.
 - `variant`: `default`, `emphasis`, `security`, `dashed`
 - Relationship IDs use the shared identifier pattern and must be unique in their collection.
+- Architecture `connection_kinds`: up to 7 `{ id, label, tone }` entries, where `tone` is a `componentType` value that colors the arrow. A connection names one with `kind`; an undeclared kind is an error. Use kinds for meaning the reader needs, such as protocol or call type, not for decoration.
+- Architecture connection `response: true` draws a dotted arrow for a reply that decides the next step; `both: true` adds an arrowhead at the start for read-and-write links. The node panel lists response connections under responses instead of callers or callees.
+- Architecture component `details`: up to 12 short lines of what the component does. The node panel shows them first; keep each line a fact from the source, not a restated label.
 
 Do not invent fields. Before writing any new field, enum, or constrained text, read its schema definition, including common `$ref` targets. In particular, check boundary kinds, repository identity, and source-reference shapes. An example demonstrates structure; it does not enumerate every valid value. Author fresh IDs, wording, facts, and layout.
 

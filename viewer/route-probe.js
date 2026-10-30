@@ -221,7 +221,7 @@
           }
           item.className = 'route-probe-node';
           item.textContent = nodeLabel(byId[id], id);
-          item.title = nodeLabel(byId[id], id) + ' · ' + id;
+          item.title = nodeLabel(byId[id], id) + ', ' + id;
           if (index === 0) item.setAttribute('data-endpoint', 'start');
           if (index === ids.length - 1 && ids.length > 1) item.setAttribute('data-endpoint', 'end');
           path.appendChild(item);

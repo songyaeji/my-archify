@@ -4131,6 +4131,24 @@ svg [data-node-id]:focus-visible [data-detail-anchor] { transform: none; }
 .m-security  { fill: var(--security-stroke); }
 .m-dashed    { fill: var(--database-stroke); }
 
+/* Authored connection kinds borrow component tones; response arrows are dotted. */
+.a-kind { fill: none; }
+.a-tone-frontend   { stroke: var(--frontend-stroke); }
+.a-tone-backend    { stroke: var(--backend-stroke); }
+.a-tone-database   { stroke: var(--database-stroke); }
+.a-tone-cloud      { stroke: var(--cloud-stroke); }
+.a-tone-security   { stroke: var(--security-stroke); }
+.a-tone-messagebus { stroke: var(--messagebus-stroke); }
+.a-tone-external   { stroke: var(--external-stroke); }
+.m-tone-frontend   { fill: var(--frontend-stroke); }
+.m-tone-backend    { fill: var(--backend-stroke); }
+.m-tone-database   { fill: var(--database-stroke); }
+.m-tone-cloud      { fill: var(--cloud-stroke); }
+.m-tone-security   { fill: var(--security-stroke); }
+.m-tone-messagebus { fill: var(--messagebus-stroke); }
+.m-tone-external   { fill: var(--external-stroke); }
+.a-response { stroke-dasharray: 2,4; }
+
 /* Stable semantic exploration hooks emitted by every renderer. */
 svg [data-node-id] {
   cursor: pointer;
@@ -4913,3 +4931,108 @@ html[data-ambient-motion="running"][data-motion="live"]:not([data-motion-owner])
   .relationship-pulse-overlay { display: none !important; }
   svg [data-node-id], svg [data-edge-from], svg [data-detail], svg [data-detail-anchor], svg [data-legend-hit], svg { transition: none !important; }
 }
+
+/* Docked detail panel: wide screens keep the Passport beside the diagram
+   instead of floating over it. Narrow screens keep the floating Passport. */
+.passport-sections:empty { display: none; }
+.passport-section { padding: 0.7rem 0 0.2rem; border-top: 1px solid var(--toolbar-border); margin-top: 0.7rem; }
+.passport-section h4 { margin: 0 0 0.4rem; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.02em; color: var(--text); }
+.passport-does { margin: 0; padding-left: 1.1rem; color: var(--text); line-height: 1.5; }
+.passport-does li + li { margin-top: 0.25rem; }
+.passport-none { margin: 0; color: var(--text); }
+.passport-calls { margin: 0; padding: 0; list-style: none; }
+.passport-calls li { display: grid; grid-template-columns: 0.25rem minmax(0, 1fr); gap: 0.55rem; padding: 0.3rem 0; }
+.passport-calls i { display: block; border-radius: 0; }
+.passport-calls span { min-width: 0; color: var(--text); }
+.focus-chip .passport-calls button {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.focus-chip .passport-calls button:hover,
+.focus-chip .passport-calls button:focus-visible { background: none; text-decoration: underline; }
+.passport-calls small { display: block; margin-top: 0.1rem; font-size: 0.75rem; color: var(--text); overflow-wrap: anywhere; }
+@media (min-width: 721px) {
+  html[data-passport-open] body { padding-right: calc(2rem + 380px); }
+  html[data-passport-open] .toolbar { right: calc(380px + 2rem + max(0px, (100vw - 4rem - 380px - min(100vw - 4rem - 380px, var(--archify-reader-width, 1440px))) / 2)); }
+  html[data-passport-open] .focus-chip:not([hidden]) {
+    position: fixed;
+    top: 0 !important;
+    right: 0;
+    bottom: 0;
+    left: auto !important;
+    z-index: 40;
+    width: 380px;
+    max-width: none;
+    overflow-y: auto;
+    border: 0;
+    border-left: 1px solid var(--toolbar-border);
+    border-radius: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+    font-size: 0.875rem;
+  }
+  html[data-passport-open] .relationship-lens-head { padding: 1.25rem 1.1rem 1rem; background: none; }
+  html[data-passport-open] .relationship-lens-drag-handle { display: none; }
+  html[data-passport-open] .relationship-lens-title { font-size: 1.375rem; }
+}
+
+/* Ask: selection chip and the movable question box. */
+.archify-ask-primary {
+  border: 1px solid var(--text);
+  border-radius: 0;
+  background: var(--text);
+  color: var(--bg);
+  font-weight: 600;
+  font-size: 0.78rem;
+  line-height: 1;
+  font-family: inherit;
+  padding: 0.45rem 0.65rem;
+  cursor: pointer;
+}
+.focus-chip .relationship-lens-actions .archify-ask-primary { border-radius: 0; background: var(--text); color: var(--bg); padding: 0.4rem 0.6rem; }
+.archify-ask-chip { position: absolute; z-index: 60; }
+.archify-ask {
+  position: absolute;
+  z-index: 61;
+  width: 360px;
+  border: 1px solid var(--text);
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  font-size: 0.85rem;
+}
+.archify-ask-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25rem 0.35rem 0.25rem 0.75rem;
+  border-bottom: 1px solid var(--toolbar-border);
+  font-weight: 700;
+  cursor: move;
+  user-select: none;
+  touch-action: none;
+}
+.archify-ask-bar button { width: 1.75rem; height: 1.75rem; border: 0; background: none; color: var(--text); font-size: 1.1rem; cursor: pointer; }
+.archify-ask-body { padding: 0.75rem; }
+.archify-ask-context { margin: 0 0 0.5rem; padding: 0.4rem 0.5rem; border: 1px solid var(--toolbar-border); overflow-wrap: anywhere; }
+.archify-ask-context b { display: block; font-size: 0.75rem; }
+.archify-ask textarea {
+  box-sizing: border-box;
+  width: 100%;
+  height: 4.5rem;
+  padding: 0.5rem;
+  border: 1px solid var(--toolbar-border);
+  border-radius: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+}
+.archify-ask-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: 0.5rem; font-size: 0.75rem; }

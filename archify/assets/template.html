@@ -4300,6 +4300,24 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     .m-security  { fill: var(--security-stroke); }
     .m-dashed    { fill: var(--database-stroke); }
 
+    /* Authored connection kinds borrow component tones; response arrows are dotted. */
+    .a-kind { fill: none; }
+    .a-tone-frontend   { stroke: var(--frontend-stroke); }
+    .a-tone-backend    { stroke: var(--backend-stroke); }
+    .a-tone-database   { stroke: var(--database-stroke); }
+    .a-tone-cloud      { stroke: var(--cloud-stroke); }
+    .a-tone-security   { stroke: var(--security-stroke); }
+    .a-tone-messagebus { stroke: var(--messagebus-stroke); }
+    .a-tone-external   { stroke: var(--external-stroke); }
+    .m-tone-frontend   { fill: var(--frontend-stroke); }
+    .m-tone-backend    { fill: var(--backend-stroke); }
+    .m-tone-database   { fill: var(--database-stroke); }
+    .m-tone-cloud      { fill: var(--cloud-stroke); }
+    .m-tone-security   { fill: var(--security-stroke); }
+    .m-tone-messagebus { fill: var(--messagebus-stroke); }
+    .m-tone-external   { fill: var(--external-stroke); }
+    .a-response { stroke-dasharray: 2,4; }
+
     /* Stable semantic exploration hooks emitted by every renderer. */
     svg [data-node-id] {
       cursor: pointer;
@@ -5082,6 +5100,111 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       .relationship-pulse-overlay { display: none !important; }
       svg [data-node-id], svg [data-edge-from], svg [data-detail], svg [data-detail-anchor], svg [data-legend-hit], svg { transition: none !important; }
     }
+
+    /* Docked detail panel: wide screens keep the Passport beside the diagram
+       instead of floating over it. Narrow screens keep the floating Passport. */
+    .passport-sections:empty { display: none; }
+    .passport-section { padding: 0.7rem 0 0.2rem; border-top: 1px solid var(--toolbar-border); margin-top: 0.7rem; }
+    .passport-section h4 { margin: 0 0 0.4rem; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.02em; color: var(--text); }
+    .passport-does { margin: 0; padding-left: 1.1rem; color: var(--text); line-height: 1.5; }
+    .passport-does li + li { margin-top: 0.25rem; }
+    .passport-none { margin: 0; color: var(--text); }
+    .passport-calls { margin: 0; padding: 0; list-style: none; }
+    .passport-calls li { display: grid; grid-template-columns: 0.25rem minmax(0, 1fr); gap: 0.55rem; padding: 0.3rem 0; }
+    .passport-calls i { display: block; border-radius: 0; }
+    .passport-calls span { min-width: 0; color: var(--text); }
+    .focus-chip .passport-calls button {
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: none;
+      color: var(--text);
+      font: inherit;
+      font-weight: 700;
+      text-align: left;
+      cursor: pointer;
+    }
+    .focus-chip .passport-calls button:hover,
+    .focus-chip .passport-calls button:focus-visible { background: none; text-decoration: underline; }
+    .passport-calls small { display: block; margin-top: 0.1rem; font-size: 0.75rem; color: var(--text); overflow-wrap: anywhere; }
+    @media (min-width: 721px) {
+      html[data-passport-open] body { padding-right: calc(2rem + 380px); }
+      html[data-passport-open] .toolbar { right: calc(380px + 2rem + max(0px, (100vw - 4rem - 380px - min(100vw - 4rem - 380px, var(--archify-reader-width, 1440px))) / 2)); }
+      html[data-passport-open] .focus-chip:not([hidden]) {
+        position: fixed;
+        top: 0 !important;
+        right: 0;
+        bottom: 0;
+        left: auto !important;
+        z-index: 40;
+        width: 380px;
+        max-width: none;
+        overflow-y: auto;
+        border: 0;
+        border-left: 1px solid var(--toolbar-border);
+        border-radius: 0;
+        box-shadow: none;
+        backdrop-filter: none;
+        font-size: 0.875rem;
+      }
+      html[data-passport-open] .relationship-lens-head { padding: 1.25rem 1.1rem 1rem; background: none; }
+      html[data-passport-open] .relationship-lens-drag-handle { display: none; }
+      html[data-passport-open] .relationship-lens-title { font-size: 1.375rem; }
+    }
+
+    /* Ask: selection chip and the movable question box. */
+    .archify-ask-primary {
+      border: 1px solid var(--text);
+      border-radius: 0;
+      background: var(--text);
+      color: var(--bg);
+      font-weight: 600;
+      font-size: 0.78rem;
+      line-height: 1;
+      font-family: inherit;
+      padding: 0.45rem 0.65rem;
+      cursor: pointer;
+    }
+    .focus-chip .relationship-lens-actions .archify-ask-primary { border-radius: 0; background: var(--text); color: var(--bg); padding: 0.4rem 0.6rem; }
+    .archify-ask-chip { position: absolute; z-index: 60; }
+    .archify-ask {
+      position: absolute;
+      z-index: 61;
+      width: 360px;
+      border: 1px solid var(--text);
+      background: var(--bg);
+      color: var(--text);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+      font-size: 0.85rem;
+    }
+    .archify-ask-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.25rem 0.35rem 0.25rem 0.75rem;
+      border-bottom: 1px solid var(--toolbar-border);
+      font-weight: 700;
+      cursor: move;
+      user-select: none;
+      touch-action: none;
+    }
+    .archify-ask-bar button { width: 1.75rem; height: 1.75rem; border: 0; background: none; color: var(--text); font-size: 1.1rem; cursor: pointer; }
+    .archify-ask-body { padding: 0.75rem; }
+    .archify-ask-context { margin: 0 0 0.5rem; padding: 0.4rem 0.5rem; border: 1px solid var(--toolbar-border); overflow-wrap: anywhere; }
+    .archify-ask-context b { display: block; font-size: 0.75rem; }
+    .archify-ask textarea {
+      box-sizing: border-box;
+      width: 100%;
+      height: 4.5rem;
+      padding: 0.5rem;
+      border: 1px solid var(--toolbar-border);
+      border-radius: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: inherit;
+      resize: vertical;
+    }
+    .archify-ask-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: 0.5rem; font-size: 0.75rem; }
   </style>
 </head>
 <body>
@@ -5422,6 +5545,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
               <span id="focus-brand" data-passport="brand" hidden></span>
               <code id="focus-id" data-passport="id"></code>
             </div>
+            <div class="passport-sections" id="focus-sections"></div>
             <div class="semantic-passport-evidence" id="focus-evidence" hidden aria-label="{{i18n:viewer.passport.evidence}}">
               <div class="semantic-passport-evidence-head">
                 <span class="semantic-passport-evidence-status">{{i18n:viewer.passport.verified}}</span>
@@ -5445,6 +5569,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           </div>
           <div class="relationship-lens-actions">
             <button id="btn-focus-clear" type="button" aria-label="{{i18n:viewer.passport.close}}" title="{{i18n:viewer.common.close}}">&#215;</button>
+            <button class="archify-ask-primary" id="btn-focus-ask" type="button" aria-label="{{i18n:viewer.ask.open}}">{{i18n:viewer.ask.button}}</button>
             <button id="btn-focus-copy" type="button" aria-label="{{i18n:viewer.passport.copy.focus}}">{{i18n:viewer.passport.copy}}</button>
             <button id="btn-focus-relations" type="button" aria-label="{{i18n:viewer.passport.relations.show}}" aria-expanded="false" aria-controls="relationship-lens-list">{{i18n:viewer.passport.relations}}</button>
           </div>
@@ -8366,6 +8491,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       var relationsBtn = document.getElementById('btn-focus-relations');
       var clearBtn = document.getElementById('btn-focus-clear');
       var moveBtn = document.getElementById('btn-focus-move');
+      var sections = document.getElementById('focus-sections');
       var activeIds = [];
       var hoveredRelationship = null;
       var focusedRelationship = null;
@@ -8719,7 +8845,89 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         setPassportValue(document.getElementById('focus-brand'), node.getAttribute('data-node-brand'));
         semanticId.textContent = id;
         semanticId.hidden = false;
+        renderPassportSections(id, node);
         renderSourceEvidence(id);
+      }
+      // Docked detail panel: what the node does, then its connections split
+      // into callers, callees and response routes, each linking to the neighbor.
+      function renderPassportSections(id, node) {
+        sections.textContent = '';
+        var details = [];
+        try { details = JSON.parse(node.getAttribute('data-node-details') || '[]'); } catch (_) { details = []; }
+        var groups = { callers: [], callees: [], responses: [] };
+        var seen = {};
+        Array.prototype.forEach.call(svg.querySelectorAll('path[data-edge-from][data-edge-to]'), function (edge) {
+          var from = edge.getAttribute('data-edge-from');
+          var to = edge.getAttribute('data-edge-to');
+          if (from !== id && to !== id) return;
+          var key = edge.getAttribute('data-edge-key') || (from + '\u0000' + to + '\u0000' + (edge.getAttribute('data-edge-label') || ''));
+          if (seen[key]) return;
+          seen[key] = true;
+          var group = edge.getAttribute('data-edge-response') === 'true' ? 'responses' : (from === id ? 'callees' : 'callers');
+          groups[group].push({ edge: edge, neighbor: from === id ? to : from });
+        });
+        function section(titleKey, body) {
+          var block = document.createElement('section');
+          block.className = 'passport-section';
+          var title = document.createElement('h4');
+          title.textContent = viewerText(titleKey);
+          block.appendChild(title);
+          block.appendChild(body);
+          sections.appendChild(block);
+        }
+        function callList(items) {
+          if (!items.length) {
+            var none = document.createElement('p');
+            none.className = 'passport-none';
+            none.textContent = viewerText('viewer.passport.section.none');
+            return none;
+          }
+          var list = document.createElement('ul');
+          list.className = 'passport-calls';
+          items.forEach(function (item) {
+            var row = document.createElement('li');
+            var swatch = document.createElement('i');
+            swatch.setAttribute('aria-hidden', 'true');
+            swatch.style.background = window.getComputedStyle(item.edge).stroke;
+            var copy = document.createElement('span');
+            var go = document.createElement('button');
+            go.type = 'button';
+            go.setAttribute('data-passport-go', item.neighbor);
+            var neighbor = svg.querySelector('[data-node-id="' + item.neighbor + '"]');
+            go.textContent = neighbor ? nodeLabel(neighbor, item.neighbor) : item.neighbor;
+            copy.appendChild(go);
+            if (item.edge.getAttribute('data-edge-both') === 'true') {
+              copy.appendChild(document.createTextNode(' ' + viewerText('viewer.passport.section.both')));
+            }
+            var edgeLabel = item.edge.getAttribute('data-edge-label');
+            if (edgeLabel) {
+              var text = document.createElement('small');
+              text.textContent = edgeLabel;
+              copy.appendChild(text);
+            }
+            row.appendChild(swatch);
+            row.appendChild(copy);
+            list.appendChild(row);
+          });
+          return list;
+        }
+        if (details.length) {
+          var doesList = document.createElement('ul');
+          doesList.className = 'passport-does';
+          details.forEach(function (line) {
+            var item = document.createElement('li');
+            item.textContent = line;
+            doesList.appendChild(item);
+          });
+          section('viewer.passport.section.does', doesList);
+        }
+        section('viewer.passport.section.callers', callList(groups.callers));
+        section('viewer.passport.section.callees', callList(groups.callees));
+        if (groups.responses.length) section('viewer.passport.section.responses', callList(groups.responses));
+      }
+      function syncPanelOpen() {
+        if (chip.hidden) html.removeAttribute('data-passport-open');
+        else html.setAttribute('data-passport-open', '');
       }
       function relationshipsFor(id, byId) {
         var seen = {};
@@ -9192,7 +9400,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           });
           target.setAttribute('aria-label', description);
           var title = document.createElementNS(svgNamespace, 'title');
-          title.textContent = record.fromLabel + ' \u2192 ' + record.toLabel + ' \u00b7 ' + record.label;
+          title.textContent = record.fromLabel + ' \u2192 ' + record.toLabel + ', ' + record.label;
           target.appendChild(title);
           record.shapes.forEach(function (shape) {
             target.appendChild(relationshipHitGeometry(shape));
@@ -9315,7 +9523,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           section.className = 'relationship-lens-group';
           var heading = document.createElement('span');
           heading.className = 'relationship-lens-group-title';
-          heading.textContent = group.label + ' · ' + items.length;
+          heading.textContent = group.label + ', ' + items.length;
           section.appendChild(heading);
           items.forEach(function (relationship) {
             var button = document.createElement('button');
@@ -9495,6 +9703,12 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           lensFrame = 0;
         }
         if (chip.hidden || activeIds.length !== 1) return;
+        // Wide screens dock the panel to the right edge; CSS owns its place.
+        if (window.innerWidth > 720) {
+          chip.style.removeProperty('top');
+          chip.style.removeProperty('left');
+          return;
+        }
         var node = svg.querySelector('[data-node-id="' + activeIds[0] + '"]');
         if (!node) return;
         var containerRect = container.getBoundingClientRect();
@@ -9609,6 +9823,8 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         });
         edges().forEach(function (edge) { edge.removeAttribute('data-focus-match'); });
         chip.hidden = true;
+        syncPanelOpen();
+        sections.textContent = '';
         label.textContent = '';
         detail.textContent = '';
         detail.hidden = true;
@@ -9711,6 +9927,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           : viewerText('viewer.focus.selectedNodes', { count: normalized.length });
         label.textContent = options.label || defaultLabel;
         chip.hidden = options.hideChip === true || normalized.length !== 1 || selectionMode;
+        syncPanelOpen();
         if (!chip.hidden) {
           renderRelationshipLens(normalized[0], byId);
           placeRelationshipLens();
@@ -9753,6 +9970,11 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         var node = event.target.closest('[data-node-id]');
         if (node) {
           var id = node.getAttribute('data-node-id');
+          // A second click on the open node closes its panel.
+          if (!chip.hidden && activeIds.length === 1 && activeIds[0] === id) {
+            clear();
+            return;
+          }
           set(id);
           if (activeIds.indexOf(id) !== -1 && Archify.view && typeof Archify.view.reveal === 'function') {
             Archify.view.reveal([id], { includeNeighbors: true, reason: 'focus' });
@@ -9782,6 +10004,15 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       });
       moveBtn.addEventListener('keydown', moveLensWithKeyboard);
       clearBtn.addEventListener('click', function () { clear({ restoreFocus: true }); });
+      sections.addEventListener('click', function (event) {
+        var go = event.target.closest('[data-passport-go]');
+        if (!go) return;
+        var id = go.getAttribute('data-passport-go');
+        set(id);
+        if (activeIds.indexOf(id) !== -1 && Archify.view && typeof Archify.view.reveal === 'function') {
+          Archify.view.reveal([id], { includeNeighbors: true, reason: 'focus' });
+        }
+      });
       copyBtn.addEventListener('click', copyFocusLink);
       upstreamBtn.addEventListener('click', function () { applyReachability('upstream'); });
       downstreamBtn.addEventListener('click', function () { applyReachability('downstream'); });
@@ -9867,7 +10098,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         if (container.getAttribute('data-just-panned') === 'true') return;
         // Export consumes the active semantic snapshot; its controls are not
         // an outside selection. Genuine outside activation still clears it.
-        if (target.closest('[data-node-id], [data-relationship-hit-key], .overview-map, #btn-export, #export-menu')) return;
+        if (target.closest('[data-node-id], [data-relationship-hit-key], .overview-map, #btn-export, #export-menu, [data-archify-ask]')) return;
         clear();
       }, true);
       window.addEventListener('scroll', requestLensPlacement, { passive: true });
@@ -9945,6 +10176,206 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         },
         active: function () { return activeIds.length === 0 ? null : (activeIds.length === 1 ? activeIds[0] : activeIds.slice()); }
       };
+    })();
+
+
+    /* ============================================================
+       Ask — select text or press Ask in the node panel to write a question.
+       Copy puts the file path, location, selected text and question on the
+       clipboard so the question can be pasted to an agent with its context.
+       ============================================================ */
+    Archify.ask = (function () {
+      var chip = document.getElementById('focus-chip');
+      var askButton = document.getElementById('btn-focus-ask');
+      var selectionChip = null;
+      var box = null;
+      var context = null;
+      var selectionTimer = 0;
+
+      function filePath() {
+        if (location.protocol !== 'file:') return location.origin + location.pathname;
+        var value = decodeURIComponent(location.pathname);
+        // file:///C:/... becomes C:\...; POSIX paths keep their slashes.
+        if (/^\/[A-Za-z]:\//.test(value)) return value.slice(1).split('/').join('\\');
+        return value;
+      }
+      function heading(element) {
+        return element ? element.textContent.replace(/\s+/g, ' ').trim() : '';
+      }
+      function where(element) {
+        var parts = [heading(document.querySelector('.header h1, h1'))];
+        if (element && chip && chip.contains(element)) {
+          parts.push(heading(document.getElementById('focus-label')));
+          var section = element.closest('.passport-section');
+          if (section) parts.push(heading(section.querySelector('h4')));
+          else if (element.closest('#focus-evidence')) parts.push(heading(chip.querySelector('.semantic-passport-evidence-status')));
+          else if (element.closest('#relationship-lens-list')) parts.push(viewerText('viewer.passport.relations'));
+        } else if (element) {
+          var card = element.closest('.card');
+          if (card) parts.push(heading(card.querySelector('h3')));
+        }
+        return parts.filter(Boolean).join(' > ');
+      }
+      function hideSelectionChip() {
+        if (selectionChip) selectionChip.remove();
+        selectionChip = null;
+      }
+      function close() {
+        if (box) box.remove();
+        box = null;
+      }
+      function copyText() {
+        var question = box.querySelector('textarea').value.trim();
+        return viewerText('viewer.ask.file') + ': ' + filePath() + '\n' +
+          viewerText('viewer.ask.location') + ': ' + context.location +
+          (context.text ? '\n' + viewerText('viewer.ask.selection') + ': "' + context.text + '"' : '') +
+          '\n' + viewerText('viewer.ask.question') + ': ' + question;
+      }
+      function copy() {
+        var text = copyText();
+        var button = box.querySelector('[data-ask-copy]');
+        function done() {
+          button.textContent = viewerText('viewer.ask.copied');
+          window.setTimeout(function () { if (button.isConnected) button.textContent = viewerText('viewer.ask.copy'); }, 1500);
+        }
+        function fallback() {
+          var area = document.createElement('textarea');
+          area.value = text;
+          area.setAttribute('data-archify-ask', '');
+          document.body.appendChild(area);
+          area.select();
+          try { document.execCommand('copy'); } catch (_) {}
+          area.remove();
+          done();
+        }
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+          navigator.clipboard.writeText(text).then(done, fallback);
+        } else fallback();
+      }
+      function build() {
+        box = document.createElement('div');
+        box.className = 'archify-ask no-print';
+        box.setAttribute('data-archify-ask', '');
+        box.setAttribute('role', 'dialog');
+        box.setAttribute('aria-label', viewerText('viewer.ask.title'));
+        var bar = document.createElement('div');
+        bar.className = 'archify-ask-bar';
+        var title = document.createElement('span');
+        title.textContent = viewerText('viewer.ask.title');
+        var closeButton = document.createElement('button');
+        closeButton.type = 'button';
+        closeButton.textContent = '\u00d7';
+        closeButton.setAttribute('aria-label', viewerText('viewer.ask.close'));
+        closeButton.addEventListener('click', close);
+        bar.appendChild(title);
+        bar.appendChild(closeButton);
+        var body = document.createElement('div');
+        body.className = 'archify-ask-body';
+        var contextBox = document.createElement('div');
+        contextBox.className = 'archify-ask-context';
+        var area = document.createElement('textarea');
+        area.name = 'question';
+        area.placeholder = viewerText('viewer.ask.placeholder');
+        var row = document.createElement('div');
+        row.className = 'archify-ask-row';
+        var hint = document.createElement('span');
+        hint.textContent = viewerText('viewer.ask.hint');
+        var copyButton = document.createElement('button');
+        copyButton.type = 'button';
+        copyButton.className = 'archify-ask-primary';
+        copyButton.setAttribute('data-ask-copy', '');
+        copyButton.textContent = viewerText('viewer.ask.copy');
+        copyButton.addEventListener('click', copy);
+        row.appendChild(hint);
+        row.appendChild(copyButton);
+        body.appendChild(contextBox);
+        body.appendChild(area);
+        body.appendChild(row);
+        box.appendChild(bar);
+        box.appendChild(body);
+        document.body.appendChild(box);
+        // The title bar moves the box; buttons inside it keep their clicks.
+        var offsetX = 0;
+        var offsetY = 0;
+        bar.addEventListener('pointerdown', function (event) {
+          if (event.target.closest('button')) return;
+          offsetX = event.pageX - box.offsetLeft;
+          offsetY = event.pageY - box.offsetTop;
+          bar.setPointerCapture(event.pointerId);
+        });
+        bar.addEventListener('pointermove', function (event) {
+          if (!bar.hasPointerCapture(event.pointerId)) return;
+          var width = document.documentElement.scrollWidth;
+          box.style.left = Math.max(0, Math.min(width - box.offsetWidth, event.pageX - offsetX)) + 'px';
+          box.style.top = Math.max(0, event.pageY - offsetY) + 'px';
+        });
+        bar.addEventListener('pointerup', function (event) {
+          if (bar.hasPointerCapture(event.pointerId)) bar.releasePointerCapture(event.pointerId);
+        });
+      }
+      function open(locationText, text, rect) {
+        hideSelectionChip();
+        context = { location: locationText, text: text };
+        var fresh = !box;
+        if (fresh) build();
+        var contextBox = box.querySelector('.archify-ask-context');
+        contextBox.textContent = '';
+        var place = document.createElement('b');
+        place.textContent = locationText;
+        contextBox.appendChild(place);
+        if (text) contextBox.appendChild(document.createTextNode('"' + text + '"'));
+        if (fresh) {
+          // Beside the docked panel when there is one, otherwise under the text.
+          var panel = chip && !chip.hidden ? chip.getBoundingClientRect() : null;
+          var left = panel && panel.left > 380 ? panel.left - box.offsetWidth - 12 : rect.left;
+          var top = panel && panel.left > 380 ? rect.top : rect.bottom + 8;
+          var maxLeft = document.documentElement.clientWidth - box.offsetWidth - 8;
+          box.style.left = Math.max(8, Math.min(maxLeft, left)) + window.scrollX + 'px';
+          box.style.top = Math.max(8, top) + window.scrollY + 'px';
+        }
+        box.querySelector('textarea').focus();
+      }
+      function onSelection() {
+        window.clearTimeout(selectionTimer);
+        selectionTimer = window.setTimeout(function () {
+          var selection = window.getSelection();
+          var text = selection ? selection.toString().replace(/\s+/g, ' ').trim() : '';
+          if (!text || !selection.rangeCount) { hideSelectionChip(); return; }
+          var range = selection.getRangeAt(0);
+          var start = range.startContainer.nodeType === 1 ? range.startContainer : range.startContainer.parentElement;
+          if (!start || start.closest('[data-archify-ask], input, textarea, svg')) { hideSelectionChip(); return; }
+          var rects = range.getClientRects();
+          var rect = rects[rects.length - 1] || range.getBoundingClientRect();
+          hideSelectionChip();
+          selectionChip = document.createElement('button');
+          selectionChip.type = 'button';
+          selectionChip.className = 'archify-ask-primary archify-ask-chip no-print';
+          selectionChip.setAttribute('data-archify-ask', '');
+          selectionChip.textContent = viewerText('viewer.ask.button');
+          selectionChip.style.left = rect.right + window.scrollX + 6 + 'px';
+          selectionChip.style.top = rect.top + window.scrollY - 3 + 'px';
+          // Keep the selection while the chip is pressed.
+          selectionChip.addEventListener('mousedown', function (event) { event.preventDefault(); });
+          selectionChip.addEventListener('click', function () { open(where(start), text.slice(0, 500), rect); });
+          document.body.appendChild(selectionChip);
+        }, 120);
+      }
+
+      document.addEventListener('selectionchange', onSelection);
+      document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape' || (!box && !selectionChip)) return;
+        // Escape closes the question box first, before focus and presentation.
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (box) close();
+        else hideSelectionChip();
+      }, true);
+      if (askButton) {
+        askButton.addEventListener('click', function () {
+          open(where(document.getElementById('focus-label')), '', askButton.getBoundingClientRect());
+        });
+      }
+      return { open: open, close: close, where: where, copyText: function () { return box ? copyText() : ''; } };
     })();
 
 
@@ -11210,7 +11641,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           hint: detailHint
         });
         var readout = (showDetailLevel ? resolvedLevel + ' ' : '') + percent;
-        resetBtn.setAttribute('aria-label', readout + ' · ' + viewerText('viewer.nav.camera', { hint: detailHint }));
+        resetBtn.setAttribute('aria-label', readout + ', ' + viewerText('viewer.nav.camera', { hint: detailHint }));
         resetBtn.setAttribute('data-detail-level', detail);
         container.setAttribute('data-detail-level', detail);
         container.setAttribute('data-camera-mode', state.mode);
@@ -12570,8 +13001,8 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           links.title = context.kind === 'focus' ? badge : action;
           if (item.links === 0) links.setAttribute('data-zero', 'true');
           var meta = document.createElement('small');
-          meta.textContent = [viewerKindLabel(item.type), item.id, item.sublabel, item.tag].filter(Boolean).join(' \u00b7 ');
-          meta.title = [viewerKindLabel(item.type), item.id, item.context, item.sublabel, item.tag].filter(Boolean).join(' \u00b7 ');
+          meta.textContent = [viewerKindLabel(item.type), item.id, item.sublabel, item.tag].filter(Boolean).join(', ');
+          meta.title = [viewerKindLabel(item.type), item.id, item.context, item.sublabel, item.tag].filter(Boolean).join(', ');
           button.appendChild(name);
           button.appendChild(links);
           button.appendChild(meta);
@@ -13036,7 +13467,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           }
           item.className = 'route-probe-node';
           item.textContent = nodeLabel(byId[id], id);
-          item.title = nodeLabel(byId[id], id) + ' · ' + id;
+          item.title = nodeLabel(byId[id], id) + ', ' + id;
           if (index === 0) item.setAttribute('data-endpoint', 'start');
           if (index === ids.length - 1 && ids.length > 1) item.setAttribute('data-endpoint', 'end');
           path.appendChild(item);
