@@ -120,6 +120,20 @@
         }
       }
     },
+    "connection_kinds": {
+      "type": "array",
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label", "tone"],
+        "properties": {
+          "id": { "$ref": "common.schema.json#/$defs/id" },
+          "label": { "type": "string", "minLength": 1 },
+          "tone": { "enum": ["frontend", "backend", "database", "cloud", "security", "messagebus", "external"] }
+        }
+      }
+    },
     "connections": {
       "type": "array",
       "items": {
@@ -132,6 +146,9 @@
           "to": { "$ref": "common.schema.json#/$defs/id" },
           "label": { "type": "string" },
           "variant": { "$ref": "common.schema.json#/$defs/variant" },
+          "kind": { "$ref": "common.schema.json#/$defs/id" },
+          "response": { "type": "boolean" },
+          "both": { "type": "boolean" },
           "fromSide": { "$ref": "common.schema.json#/$defs/side" },
           "toSide": { "$ref": "common.schema.json#/$defs/side" },
           "route": { "enum": ["auto", "straight", "orthogonal-h", "orthogonal-v"] },

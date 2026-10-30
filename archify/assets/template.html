@@ -4300,6 +4300,24 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     .m-security  { fill: var(--security-stroke); }
     .m-dashed    { fill: var(--database-stroke); }
 
+    /* Authored connection kinds borrow component tones; response arrows are dotted. */
+    .a-kind { fill: none; }
+    .a-tone-frontend   { stroke: var(--frontend-stroke); }
+    .a-tone-backend    { stroke: var(--backend-stroke); }
+    .a-tone-database   { stroke: var(--database-stroke); }
+    .a-tone-cloud      { stroke: var(--cloud-stroke); }
+    .a-tone-security   { stroke: var(--security-stroke); }
+    .a-tone-messagebus { stroke: var(--messagebus-stroke); }
+    .a-tone-external   { stroke: var(--external-stroke); }
+    .m-tone-frontend   { fill: var(--frontend-stroke); }
+    .m-tone-backend    { fill: var(--backend-stroke); }
+    .m-tone-database   { fill: var(--database-stroke); }
+    .m-tone-cloud      { fill: var(--cloud-stroke); }
+    .m-tone-security   { fill: var(--security-stroke); }
+    .m-tone-messagebus { fill: var(--messagebus-stroke); }
+    .m-tone-external   { fill: var(--external-stroke); }
+    .a-response { stroke-dasharray: 2,4; }
+
     /* Stable semantic exploration hooks emitted by every renderer. */
     svg [data-node-id] {
       cursor: pointer;

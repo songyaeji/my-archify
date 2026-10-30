@@ -20,6 +20,8 @@
   "legend.architecture.security": "Security",
   "legend.architecture.messagebus": "Message bus",
   "legend.architecture.external": "External",
+  "legend.architecture.response": "Response",
+  "legend.architecture.both": "Both ways",
   "legend.workflow.frontend": "User UI",
   "legend.workflow.backend": "Agent logic",
   "legend.workflow.security": "Policy",

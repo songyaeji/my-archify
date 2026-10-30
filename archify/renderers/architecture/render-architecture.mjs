@@ -96,6 +96,12 @@ function measureComponent(c) {
 }
 
 const components = new Map(asArray(arch.components).map((c) => [c.id, measureComponent(c)]));
+// Authored connection kinds color arrows by meaning (protocol, data store,
+// model call). Each kind borrows a component tone so every theme stays legible.
+const connectionKinds = new Map(asArray(arch.connection_kinds).map((kind) => [kind.id, kind]));
+const usedConnectionKinds = [...connectionKinds.values()]
+  .filter((kind) => asArray(arch.connections).some((conn) => conn.kind === kind.id));
+const toneMarkers = [...new Set(usedConnectionKinds.map((kind) => kind.tone))];
 const enforcesBoundaryTitleComposition = Boolean(arch.meta?.quality_profile);
 const componentSteps = new Map();
 for (const [index, conn] of asArray(arch.connections).entries()) {
@@ -151,11 +157,32 @@ function boundaryLabelWidth(label, fontSize) {
   return Math.max(30, textUnits(label) * fontSize * 0.6 + 10);
 }
 
-const architectureLegendEntries = resolveLegend(
-  arch.meta?.legend,
-  LEGEND_CATALOG,
-  new Set([...components.values()].map((component) => component.type)),
-);
+// Connection entries follow the component kinds: one per used connection kind,
+// then the response and both-way line styles when the diagram uses them.
+const connectionLegendEntries = arch.meta?.legend?.mode === 'hidden' ? [] : [
+  ...usedConnectionKinds.map((kind) => ({ kind: `connection-${kind.id}`, label: kind.label, tone: kind.tone })),
+  ...(asArray(arch.connections).some((conn) => conn.response)
+    ? [{ kind: 'connection-response', label: i18nText(arch.meta.locale, 'legend.architecture.response'), lineStyle: 'response' }] : []),
+  ...(asArray(arch.connections).some((conn) => conn.both)
+    ? [{ kind: 'connection-both', label: i18nText(arch.meta.locale, 'legend.architecture.both'), lineStyle: 'both' }] : []),
+].map((entry) => ({ ...entry, present: true, interactive: false, swatchWidth: 22 }));
+
+const architectureLegendEntries = [
+  ...resolveLegend(
+    arch.meta?.legend,
+    LEGEND_CATALOG,
+    new Set([...components.values()].map((component) => component.type)),
+  ),
+  ...connectionLegendEntries,
+];
+
+function renderConnectionSwatch(entry) {
+  const y = entry.baseline - 4;
+  const x2 = entry.x + entry.swatchWidth;
+  if (entry.tone) return `<line x1="${entry.x}" y1="${y}" x2="${x2}" y2="${y}" class="a-kind a-tone-${entry.tone}" stroke-width="2"/>`;
+  if (entry.lineStyle === 'response') return `<line x1="${entry.x}" y1="${y}" x2="${x2}" y2="${y}" class="a-default a-response" stroke-width="2"/>`;
+  return `<line x1="${entry.x + 4}" y1="${y}" x2="${x2 - 4}" y2="${y}" class="a-default" stroke-width="1.5"/><polygon points="${entry.x},${y} ${entry.x + 6},${y - 3} ${entry.x + 6},${y + 3}" class="m-default"/><polygon points="${x2},${y} ${x2 - 6},${y - 3} ${x2 - 6},${y + 3}" class="m-default"/>`;
+}
 
 // One source for connection label geometry: the rect the containment rule
 // measures is the rect the SVG mask draws, the auto canvas covers, the legend
@@ -824,6 +851,16 @@ function validateArchitecture() {
       problems.push(message);
       problems.push(`Connection "${conn.label || conn[field]}" endpoint "${conn[field]}" does not name a declared component.`);
     }
+    if (conn.kind !== undefined && !connectionKinds.has(conn.kind)) {
+      const message = `Connection "${conn.id || `${conn.from}->${conn.to}`}" uses undeclared kind "${conn.kind}".`;
+      diagnostics.push({
+        code: 'architecture/unknown-connection-kind', severity: 'error', message,
+        subject: { diagramType: 'architecture', connection: conn.id ?? null, path: `/connections/${connIndex}/kind`, from: conn.from, to: conn.to },
+        evidence: { kind: conn.kind, declaredKinds: [...connectionKinds.keys()] },
+        supportedFixes: [`declare "${conn.kind}" in /connection_kinds or set /connections/${connIndex}/kind to a declared kind`],
+      });
+      problems.push(message);
+    }
     if (components.has(conn.from) && components.has(conn.to)) {
       const routed = pathFor(conn);
       const outsidePoints = routed.points.filter(([x, y]) => x < 0 || y < 0 || x > viewBox[0] || y > viewBox[1]);
@@ -1054,8 +1091,35 @@ function renderBoundaryLabel(b, index) {
         </g>`;
 }
 
+function connectionStyle(conn) {
+  const kind = connectionKinds.get(conn.kind);
+  const [variantClass, variantMarker] = arrowClassMap[conn.variant || 'default'] || arrowClassMap.default;
+  const cls = kind ? `a-kind a-tone-${kind.tone}` : variantClass;
+  const marker = kind ? `arrowhead-tone-${kind.tone}` : variantMarker;
+  // Both-way arrows need a marker that flips at the start of the path.
+  const startMarker = conn.both ? (kind ? marker : `${variantMarker}-start`) : null;
+  return { cls: conn.response ? `${cls} a-response` : cls, marker, startMarker };
+}
+
+function renderConnectionDefinitions() {
+  const markers = toneMarkers.map((tone) => `
+          <marker id="arrowhead-tone-${tone}" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto-start-reverse">
+            <polygon points="0 0, 10 3.5, 0 7" class="m-tone-${tone}" />
+          </marker>`);
+  const startVariants = [...new Set(asArray(arch.connections)
+    .filter((conn) => conn.both && !connectionKinds.has(conn.kind))
+    .map((conn) => (arrowClassMap[conn.variant || 'default'] || arrowClassMap.default)))];
+  for (const [variantClass, variantMarker] of startVariants) {
+    markers.push(`
+          <marker id="${variantMarker}-start" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto-start-reverse">
+            <polygon points="0 0, 10 3.5, 0 7" class="${variantClass.replace(/^a-/, 'm-')}" />
+          </marker>`);
+  }
+  return markers.join('');
+}
+
 function renderConnectionPath(conn, index) {
-  const [cls, marker] = arrowClassMap[conn.variant || 'default'] || arrowClassMap.default;
+  const { cls, marker, startMarker } = connectionStyle(conn);
   const routed = pathFor(conn);
   const strokeWidth = conn.width || (conn.variant === 'emphasis' ? 1.8 : 1.5);
   const automaticRoute = hasAutomaticRouteGeometry(conn);
@@ -1064,7 +1128,7 @@ function renderConnectionPath(conn, index) {
     : '';
   const crossover = automaticRoute
     ? ` data-composition-crossover="halo"${conn.labelAt ? '' : ' data-composition-independent="true"'}` : '';
-  const edge = `        <path ${focusEdgeAttrs(conn.from, conn.to, conn.label, index, conn.id)} data-composition-points="${routePointsValue(routed.points)}"${crossover}${authoredStraightRouteAttrs(conn, routed.points)} d="${routed.d}" class="${cls}"${animateAttr(arch.meta, 'edge', index)} stroke-width="${strokeWidth}" marker-end="url(#${marker})"/>`;
+  const edge = `        <path ${focusEdgeAttrs(conn.from, conn.to, conn.label, index, conn.id)} data-composition-points="${routePointsValue(routed.points)}"${crossover}${authoredStraightRouteAttrs(conn, routed.points)} d="${routed.d}" class="${cls}"${animateAttr(arch.meta, 'edge', index)} stroke-width="${strokeWidth}" marker-end="url(#${marker})"${startMarker ? ` marker-start="url(#${startMarker})"` : ''}/>`;
   if (!automaticRoute) return edge;
   // The wrapper is presentation-only: viewer state remains on the one semantic
   // edge, while CSS can keep its preceding mask underlay at the same opacity.
@@ -1129,7 +1193,7 @@ function renderLegend() {
       unfit: arch.meta?.legend === undefined ? 'hide' : 'error',
       diagramType: 'architecture',
     },
-    renderSwatch: (entry) => `<rect x="${entry.x}" y="${entry.baseline - 9}" width="16" height="10" rx="2.5" class="${componentFill[entry.kind] || 'c-external'}" stroke-width="1"/>`,
+    renderSwatch: (entry) => entry.kind.startsWith('connection-') ? renderConnectionSwatch(entry) : `<rect x="${entry.x}" y="${entry.baseline - 9}" width="16" height="10" rx="2.5" class="${componentFill[entry.kind] || 'c-external'}" stroke-width="1"/>`,
   });
 }
 
@@ -1149,7 +1213,7 @@ function renderSvg() {
   const readerPrimaryText = arch.meta?.viewBox ? '' : ' data-reader-primary-text="14"';
   return `      <svg viewBox="0 0 ${viewBox[0]} ${viewBox[1]}" ${svgRootAttrs(arch.meta)} ${NODE_CARD_ATTR}${readerFit}${readerMinimumText}${readerPrimaryText}>
 ${svgAccessibleText(arch.meta, 'architecture')}
-${renderDefinitions()}
+${renderDefinitions(renderConnectionDefinitions())}
 ${nodeCardStyle()}
 
         <!-- Background Grid -->
